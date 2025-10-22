@@ -20,6 +20,7 @@ struct Habit: Identifiable {
             formatter.dateFormat = "dd-MM-yyyy HH:mm"
             return formatter.string(from: doneDate)
         }
+    
 }
 
 enum Priority: String, Codable {
