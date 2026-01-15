@@ -7,13 +7,13 @@ final class ChainedHabitsPlugin: DataPlugin {
     var isEnabled: Bool { true } // luego lo conectamos a un toggle si quieres
     var models: [any PersistentModel.Type] { [HabitChain.self, HabitChainItem.self] }
 
-    nonisolated required init(config: AppConfig) { self.config = config }
+    required init(config: AppConfig) { self.config = config }
 
-    nonisolated func willDeleteHabit(_ habit: Habit) async {
+    func willDeleteHabit(_ habit: Habit) async {
         await MainActor.run {
             ChainedHabitsStorage.deleteLinks(for: habit.id)
         }
     }
 
-    nonisolated func didDeleteHabit(habitId: UUID) async { }
+    func didDeleteHabit(habitId: UUID) async { }
 }

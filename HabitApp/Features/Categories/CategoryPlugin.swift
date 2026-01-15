@@ -8,13 +8,13 @@ final class CategoryPlugin: DataPlugin, ViewPlugin {
     var models: [any PersistentModel.Type] { [HabitCategory.self, HabitCategoryAssignment.self] }
     var isEnabled: Bool { config.enableCategories }
 
-    nonisolated required init(config: AppConfig) { self.config = config }
+    required init(config: AppConfig) { self.config = config }
 
-    nonisolated func willDeleteHabit(_ habit: Habit) async {
+    func willDeleteHabit(_ habit: Habit) async {
         await CategoryStorage.deleteAssignments(for: habit.id)
     }
 
-    nonisolated func didDeleteHabit(habitId: UUID) async { }
+    func didDeleteHabit(habitId: UUID) async { }
 
     func habitRowView(for habit: Habit) -> AnyView {
         AnyView(CategoryRowView(habitId: habit.id, isEnabled: isEnabled))

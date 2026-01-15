@@ -8,18 +8,18 @@ final class ReminderPlugin: DataPlugin, ViewPlugin {
     var models: [any PersistentModel.Type] { [HabitReminder.self] }
     var isEnabled: Bool { config.enableReminders }
 
-    nonisolated required init(config: AppConfig) {
+    required init(config: AppConfig) {
         self.config = config
         Task { @MainActor in
             await ReminderNotifications.requestPermission()
         }
     }
 
-    nonisolated func willDeleteHabit(_ habit: Habit) async {
+    func willDeleteHabit(_ habit: Habit) async {
         await ReminderStorage.deleteReminders(for: habit.id)
     }
 
-    nonisolated func didDeleteHabit(habitId: UUID) async { }
+    func didDeleteHabit(habitId: UUID) async { }
 
     func habitRowView(for habit: Habit) -> AnyView {
         AnyView(ReminderRowView(habitId: habit.id, isEnabled: isEnabled))

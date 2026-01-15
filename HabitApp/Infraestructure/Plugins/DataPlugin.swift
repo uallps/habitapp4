@@ -6,13 +6,14 @@
 import Foundation
 import SwiftData
 
+@MainActor
 protocol DataPlugin: FeaturePlugin {
     var models: [any PersistentModel.Type] { get }
 
-    nonisolated func willDeleteHabit(_ habit: Habit) async
-    nonisolated func didDeleteHabit(habitId: UUID) async
+    func willDeleteHabit(_ habit: Habit) async
+    func didDeleteHabit(habitId: UUID) async
 
-    nonisolated func habitCompletionDidChange(
+    func habitCompletionDidChange(
         habitId: UUID,
         isCompleted: Bool,
         completionDate: Date?
@@ -20,9 +21,9 @@ protocol DataPlugin: FeaturePlugin {
 }
 
 extension DataPlugin {
-    nonisolated func willDeleteHabit(_ habit: Habit) async { }
-    nonisolated func didDeleteHabit(habitId: UUID) async { }
-    nonisolated func habitCompletionDidChange(
+    func willDeleteHabit(_ habit: Habit) async { }
+    func didDeleteHabit(habitId: UUID) async { }
+    func habitCompletionDidChange(
         habitId: UUID,
         isCompleted: Bool,
         completionDate: Date?

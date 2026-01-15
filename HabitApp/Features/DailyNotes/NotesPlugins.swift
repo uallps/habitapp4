@@ -8,13 +8,13 @@ final class NotesPlugin: DataPlugin, ViewPlugin {
     var models: [any PersistentModel.Type] { [HabitNote.self] }
     var isEnabled: Bool { config.enableDailyNotes }
 
-    nonisolated required init(config: AppConfig) { self.config = config }
+    required init(config: AppConfig) { self.config = config }
 
-    nonisolated func willDeleteHabit(_ habit: Habit) async {
+    func willDeleteHabit(_ habit: Habit) async {
         await NotesStorage.deleteNotes(for: habit.id)
     }
 
-    nonisolated func didDeleteHabit(habitId: UUID) async { }
+    func didDeleteHabit(habitId: UUID) async { }
 
     func habitRowView(for habit: Habit) -> AnyView {
         AnyView(NotesRowView(habitId: habit.id, isEnabled: isEnabled))

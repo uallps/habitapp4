@@ -7,7 +7,7 @@ final class StatsPlugin: ViewPlugin {
     var models: [any PersistentModel.Type] { [] }
     var isEnabled: Bool { config.enableStatistics }
 
-    nonisolated required init(config: AppConfig) { self.config = config }
+    required init(config: AppConfig) { self.config = config }
 
     func habitRowView(for habit: Habit) -> AnyView {
         AnyView(EmptyView())

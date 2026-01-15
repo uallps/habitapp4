@@ -8,15 +8,15 @@ final class StreakPlugin: DataPlugin, ViewPlugin {
     var isEnabled: Bool { config.enableStreaks }
     var models: [any PersistentModel.Type] { [HabitStreak.self] }
 
-    nonisolated required init(config: AppConfig) { self.config = config }
+    required init(config: AppConfig) { self.config = config }
 
-    nonisolated func willDeleteHabit(_ habit: Habit) async {
+    func willDeleteHabit(_ habit: Habit) async {
         await StreakStorage.deleteStreak(for: habit.id)
     }
 
-    nonisolated func didDeleteHabit(habitId: UUID) async { }
+    func didDeleteHabit(habitId: UUID) async { }
 
-    nonisolated func habitCompletionDidChange(
+    func habitCompletionDidChange(
         habitId: UUID,
         isCompleted: Bool,
         completionDate: Date?

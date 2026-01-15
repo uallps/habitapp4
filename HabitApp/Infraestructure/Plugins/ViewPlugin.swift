@@ -6,6 +6,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 protocol ViewPlugin: FeaturePlugin {
     func habitRowView(for habit: Habit) -> AnyView
     func habitDetailView(for habit: Binding<Habit>) -> AnyView
