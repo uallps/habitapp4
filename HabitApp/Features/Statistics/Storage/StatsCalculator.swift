@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 
+@MainActor
 enum StatsCalculator {
     static func calculate(for habit: Habit) -> HabitStats {
         let daysSinceCreation = max(1, Calendar.current.dateComponents([.day], from: habit.createdDate, to: Date()).day ?? 1)

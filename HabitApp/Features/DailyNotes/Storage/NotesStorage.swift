@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 
+@MainActor
 enum NotesStorage {
     static func deleteNotes(for habitId: UUID) {
         guard let ctx = SwiftDataContext.shared else { return }
