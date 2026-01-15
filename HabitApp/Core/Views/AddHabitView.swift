@@ -9,6 +9,7 @@ import SwiftUI
 import PhotosUI
 #endif
 
+@MainActor
 struct AddHabitView: View {
     @Environment(\.dismiss) private var dismiss
     let storageProvider: StorageProvider

@@ -13,6 +13,7 @@ import UIKit
 import AppKit
 #endif
 
+@MainActor
 struct EditHabitView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var config: AppConfig

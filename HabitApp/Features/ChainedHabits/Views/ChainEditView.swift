@@ -1,6 +1,7 @@
 import SwiftUI
 
-struct ChainEditView: View {
+
+@MainActor
     @Environment(\.dismiss) private var dismiss
 
     let chainId: UUID

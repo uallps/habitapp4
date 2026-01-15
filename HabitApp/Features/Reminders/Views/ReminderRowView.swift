@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 
+@MainActor
 struct ReminderRowView: View {
     let habitId: UUID
     let isEnabled: Bool

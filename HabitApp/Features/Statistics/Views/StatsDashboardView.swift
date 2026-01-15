@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 
+@MainActor
 struct StatsDashboardView: View {
     enum Timeframe: String, CaseIterable, Identifiable {
         case week = "Semana"
