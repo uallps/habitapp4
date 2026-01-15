@@ -11,7 +11,7 @@ final class NotesPlugin: DataPlugin, ViewPlugin {
     required init(config: AppConfig) { self.config = config }
 
     func willDeleteHabit(_ habit: Habit) async {
-        await NotesStorage.deleteNotes(for: habit.id)
+        NotesStorage.deleteNotes(for: habit.id)
     }
 
     func didDeleteHabit(habitId: UUID) async { }

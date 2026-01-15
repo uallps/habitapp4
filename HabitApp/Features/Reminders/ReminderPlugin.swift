@@ -16,7 +16,7 @@ final class ReminderPlugin: DataPlugin, ViewPlugin {
     }
 
     func willDeleteHabit(_ habit: Habit) async {
-        await ReminderStorage.deleteReminders(for: habit.id)
+        ReminderStorage.deleteReminders(for: habit.id)
     }
 
     func didDeleteHabit(habitId: UUID) async { }

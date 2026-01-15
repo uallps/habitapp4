@@ -11,7 +11,7 @@ final class StreakPlugin: DataPlugin, ViewPlugin {
     required init(config: AppConfig) { self.config = config }
 
     func willDeleteHabit(_ habit: Habit) async {
-        await StreakStorage.deleteStreak(for: habit.id)
+        StreakStorage.deleteStreak(for: habit.id)
     }
 
     func didDeleteHabit(habitId: UUID) async { }

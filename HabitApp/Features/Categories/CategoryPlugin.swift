@@ -11,7 +11,7 @@ final class CategoryPlugin: DataPlugin, ViewPlugin {
     required init(config: AppConfig) { self.config = config }
 
     func willDeleteHabit(_ habit: Habit) async {
-        await CategoryStorage.deleteAssignments(for: habit.id)
+        CategoryStorage.deleteAssignments(for: habit.id)
     }
 
     func didDeleteHabit(habitId: UUID) async { }
