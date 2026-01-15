@@ -8,6 +8,7 @@ import SwiftUI
 import SwiftData
 import Combine
 
+@MainActor
 class AppConfig: ObservableObject {
     // Toggles núcleo heredados
     @AppStorage("showDueDates") var showDueDates: Bool = true
