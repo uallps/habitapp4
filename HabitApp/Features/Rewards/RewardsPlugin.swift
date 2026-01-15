@@ -1,3 +1,4 @@
+#if PREMIUM
 import Foundation
 import SwiftData
 
@@ -19,3 +20,4 @@ final class RewardsPlugin: DataPlugin {
         }
     }
 }
+#endif

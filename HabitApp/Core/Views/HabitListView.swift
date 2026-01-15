@@ -48,19 +48,21 @@ struct HabitListView: View {
                                 HabitDashboardRow(
                                     habit: habit,
                                     destination: AnyView({
+                                        #if PREMIUM
                                         if let chainId = ChainedHabitsStorage.fetchChainId(containing: habit.id) {
                                             return AnyView(ChainedHabitDetailView(chainId: chainId))
-                                        } else {
-                                            return AnyView(HabitDetailView(
-                                                habit: binding(for: habit),
-                                                onSave: {
-                                                    Task {
-                                                        await viewModel.saveHabits()
-                                                        NotificationCenter.default.post(name: .habitsDidChange, object: nil)
-                                                    }
-                                                }
-                                            ))
                                         }
+                                        #endif
+
+                                        return AnyView(HabitDetailView(
+                                            habit: binding(for: habit),
+                                            onSave: {
+                                                Task {
+                                                    await viewModel.saveHabits()
+                                                    NotificationCenter.default.post(name: .habitsDidChange, object: nil)
+                                                }
+                                            }
+                                        ))
                                     }()),
                                     onToggle: { await viewModel.toggleHabitCompletion(habit: habit) },
                                     onDelete: { await viewModel.removeHabit(habit) }
@@ -192,6 +194,7 @@ private struct HabitDashboardRow<Destination: View>: View {
             }
             .buttonStyle(.plain)
 
+            #if PREMIUM
             HStack(spacing: 6) {
                 Image(systemName: "medal.fill")
                     .font(.caption.weight(.semibold))
@@ -201,6 +204,7 @@ private struct HabitDashboardRow<Destination: View>: View {
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.yellow)
             }
+            #endif
         }
         .padding(16)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

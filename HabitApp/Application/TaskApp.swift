@@ -38,8 +38,12 @@ struct TaskAppMain: App {
                     StatsDashboardView(storageProvider: config.storageProvider)
                         .tag(MainTab.progress)
 
-                    NavigationStack { RewardsView() }
-                        .tag(MainTab.ranking)
+                    #if PREMIUM
+                    NavigationStack {
+                        RewardsView()
+                    }
+                    .tag(MainTab.ranking)
+                    #endif
 
                     SettingsView()
                         .tag(MainTab.profile)
@@ -77,7 +81,9 @@ struct TaskAppMain: App {
                 List(selection: $selectedDetailView) {
                     NavigationLink(value: "inicio") { Label("Inicio", systemImage: "house") }
                     NavigationLink(value: "progreso") { Label("Progreso", systemImage: "chart.bar") }
+                    #if PREMIUM
                     NavigationLink(value: "ranking") { Label("Logros", systemImage: "sparkles") }
+                    #endif
                     NavigationLink(value: "perfil") { Label("Perfil", systemImage: "person") }
                 }
             } detail: {
@@ -137,8 +143,9 @@ private struct BottomMenuBar: View {
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
-
+            #if PREMIUM
             item(tab: .ranking, title: "LOGROS", icon: "sparkles")
+            #endif
             item(tab: .profile, title: "PERFIL", icon: "person.fill")
         }
         .padding(.horizontal, 10)

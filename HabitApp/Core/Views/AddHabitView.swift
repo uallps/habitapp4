@@ -162,7 +162,9 @@ struct AddHabitView: View {
                         }
 
                         iconSuggestions
+#if PREMIUM
                         chainedHabitSection
+#endif
 
                         Spacer(minLength: 100)
                     }
@@ -196,12 +198,11 @@ struct AddHabitView: View {
         .sheet(isPresented: $showingCategoryPicker) {
             CategoryPickerSheet(selectedCategoryId: $selectedCategoryId)
         }
+#if PREMIUM
         .sheet(isPresented: $showingChainedHabitPicker) {
-            ChainedHabitPickerSheet(
-                habits: availableHabits,
-                selectedIds: $chainedHabitIds
-            )
+            ChainedHabitPickerSheet(habits: availableHabits, selectedIds: $chainedHabitIds)
         }
+#endif
     }
 
     // MARK: UI bits
@@ -438,12 +439,13 @@ struct AddHabitView: View {
                         }
                     }
                 }
-
+                #if PREMIUM
                 if SwiftDataContext.shared != nil, !chainedHabitIds.isEmpty {
                     var ids: [UUID] = [habit.id]
                     for id in chainedHabitIds where !ids.contains(id) { ids.append(id) }
                     _ = ChainedHabitsStorage.createChain(name: "Hábito Encadenado", habitIds: ids)
                 }
+                #endif
             } label: {
                 Text("Guardar Hábito")
                     .font(.headline)

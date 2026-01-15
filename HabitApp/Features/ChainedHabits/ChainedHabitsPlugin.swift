@@ -1,3 +1,4 @@
+#if PREMIUM
 import Foundation
 import SwiftData
 
@@ -17,3 +18,4 @@ final class ChainedHabitsPlugin: DataPlugin {
 
     func didDeleteHabit(habitId: UUID) async { }
 }
+#endif
