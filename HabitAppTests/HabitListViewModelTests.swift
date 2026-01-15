@@ -37,8 +37,7 @@ struct HabitListViewModelTests {
     @Test
     func testInitialDefaultHabits() async {
         let vm = HabitListViewModel(storageProvider: MockStorageProvider())
-        #expect(vm.habits.count == 3)
-        #expect(vm.habits.map(\.name).contains("Comprar leche"))
+        #expect(vm.habits.isEmpty)
     }
     
     @Test
@@ -79,21 +78,34 @@ struct HabitListViewModelTests {
     func testRemoveHabitsRemovesAndPersists() async {
         let mock = MockStorageProvider()
         let vm = HabitListViewModel(storageProvider: mock)
+
+        await vm.addHabit(habit: Habit(name: "A", frequency: .daily))
+        await vm.addHabit(habit: Habit(name: "B", frequency: .daily))
+
         let initialCount = vm.habits.count
+        let initialSaves = mock.saveCallCount
+
         await vm.removeHabits(atOffsets: IndexSet(integer: 1))
+
         #expect(vm.habits.count == initialCount - 1)
-        #expect(mock.saveCallCount == 1)
+        #expect(mock.saveCallCount == initialSaves + 1)
     }
     
     @Test
     func testToggleCompletionPersists() async {
         let mock = MockStorageProvider()
         let vm = HabitListViewModel(storageProvider: mock)
-        let habit = vm.habits[0]
-        let initial = habit.isCompletedForCurrentPeriod
-        await vm.toggleHabitCompletion(habit: habit)
+
+        let h = Habit(name: "A", frequency: .daily)
+        await vm.addHabit(habit: h)
+
+        let initial = vm.habits[0].isCompletedForCurrentPeriod
+        let initialSaves = mock.saveCallCount
+
+        await vm.toggleHabitCompletion(habit: h)
+
         #expect(vm.habits[0].isCompletedForCurrentPeriod != initial)
-        #expect(mock.saveCallCount == 1)
+        #expect(mock.saveCallCount == initialSaves + 1)
     }
     
     @Test

@@ -79,19 +79,30 @@ final class Habit: Identifiable, Codable {
     }
 
     required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        name = try container.decode(String.self, forKey: .name)
-        detail = try container.decode(String.self, forKey: .detail)
-        frequency = try container.decode(HabitFrequency.self, forKey: .frequency)
-        isActive = try container.decode(Bool.self, forKey: .isActive)
-        createdDate = try container.decode(Date.self, forKey: .createdDate)
-        lastCompletedDate = try container.decodeIfPresent(Date.self, forKey: .lastCompletedDate)
-        iconName = try container.decodeIfPresent(String.self, forKey: .iconName)
-        imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
-        reminderTime = try container.decodeIfPresent(Date.self, forKey: .reminderTime)
-        repeatDays = try container.decodeIfPresent([Int].self, forKey: .repeatDays) ?? []
-        monthlyDay = try container.decodeIfPresent(Int.self, forKey: .monthlyDay)
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+
+        let decodedId = try c.decode(UUID.self, forKey: .id)
+        let decodedName = try c.decode(String.self, forKey: .name)
+        let decodedDetail = try c.decode(String.self, forKey: .detail)
+        let decodedFrequency = try c.decode(HabitFrequency.self, forKey: .frequency)
+        let decodedIsActive = try c.decode(Bool.self, forKey: .isActive)
+        let decodedCreatedDate = try c.decode(Date.self, forKey: .createdDate)
+
+        self.init(
+            name: decodedName,
+            description: decodedDetail,
+            frequency: decodedFrequency,
+            isActive: decodedIsActive,
+            createdDate: decodedCreatedDate
+        )
+
+        id = decodedId
+        lastCompletedDate = try c.decodeIfPresent(Date.self, forKey: .lastCompletedDate)
+        iconName = try c.decodeIfPresent(String.self, forKey: .iconName)
+        imageData = try c.decodeIfPresent(Data.self, forKey: .imageData)
+        reminderTime = try c.decodeIfPresent(Date.self, forKey: .reminderTime)
+        repeatDays = try c.decodeIfPresent([Int].self, forKey: .repeatDays) ?? []
+        monthlyDay = try c.decodeIfPresent(Int.self, forKey: .monthlyDay)
     }
 
     func encode(to encoder: Encoder) throws {
