@@ -1,4 +1,4 @@
-name: Build TaskApp
+name: Build HabitApp
 
 on:
   push:
@@ -24,12 +24,11 @@ jobs:
     strategy:
       matrix:
         platform: [iOS, macOS]
-        scheme: ["TaskApp", "TaskApp Premium"]
+        scheme: ["HabitApp", "HabitApp Premium"]
         include:
           - platform: iOS
             sdk: iphonesimulator
-            destination: "platform=iOS Simulator,OS=26.0.1,name=iPhone 17"
-            artifact-name: ios-build
+            destination: "platform=iOS Simulator,name=iPhone 15,OS=latest"
           - platform: macOS
             sdk: macosx
             destination: "platform=macOS"
@@ -46,8 +45,9 @@ jobs:
 
       - name: Build for ${{ matrix.platform }}
         run: |
+          set -euo pipefail
           xcodebuild clean build \
-            -project TaskApp.xcodeproj \
+            -project HabitApp.xcodeproj \
             -scheme "${{ matrix.scheme }}" \
             -sdk ${{ matrix.sdk }} \
             -destination '${{ matrix.destination }}' \
@@ -56,12 +56,24 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
+      - name: Test (iOS, HabitApp)
+        if: matrix.platform == 'iOS' && matrix.scheme == 'HabitApp'
+        run: |
+          set -euo pipefail
+          xcodebuild test \
+            -project HabitApp.xcodeproj \
+            -scheme "HabitApp" \
+            -destination '${{ matrix.destination }}' \
+            -derivedDataPath ./DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
       - name: Find and list build products
         if: success()
         run: |
           echo "=== ${{ matrix.platform }} ${{ matrix.scheme }} Build products ==="
-          find ./DerivedData -name "*.app" -type d
-          ls -R ./DerivedData/Build/Products/
+          find ./DerivedData -name "*.app" -type d || true
+          ls -R ./DerivedData/Build/Products/ || true
 
       - name: Archive build artifacts
         if: success()
