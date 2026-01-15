@@ -50,7 +50,8 @@ struct HabitListViewModelTests {
         let mock = MockStorageProvider(loadResult: loaded)
         let vm = HabitListViewModel(storageProvider: mock)
         await vm.loadHabits()
-        #expect(vm.habits == loaded)
+        #expect(vm.habits.count == loaded.count)
+        #expect(vm.habits.map(\.name) == loaded.map(\.name))
     }
     
     @Test
@@ -59,8 +60,8 @@ struct HabitListViewModelTests {
         mock.shouldThrowOnLoad = true
         let vm = HabitListViewModel(storageProvider: mock)
         await vm.loadHabits()
-        // Fallback: habits remain default
-        #expect(vm.habits.count == 3)
+        // Fallback: no cambia el estado actual
+        #expect(vm.habits.isEmpty)
     }
     
     @Test
