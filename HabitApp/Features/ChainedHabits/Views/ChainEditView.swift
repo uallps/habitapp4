@@ -83,10 +83,7 @@ struct ChainEditView: View {
              }
          }
          #if os(iOS)
-         .environment(\.editMode, Binding<EditMode?>(
-             get: { editMode },
-             set: { editMode = $0 ?? .inactive }
-         ))
+         .environment(\.editMode, $editMode)
          #endif
          #if os(macOS)
          .frame(minWidth: 420, minHeight: 520)
