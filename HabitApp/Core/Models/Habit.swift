@@ -78,7 +78,7 @@ final class Habit: Identifiable, Codable {
         self.monthlyDay = nil
     }
 
-    required init(from decoder: Decoder) throws {
+    required convenience init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
 
         let decodedId = try c.decode(UUID.self, forKey: .id)
