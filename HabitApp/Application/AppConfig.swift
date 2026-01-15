@@ -35,7 +35,33 @@ class AppConfig: ObservableObject {
             PluginRegistry.shared.register(pluginType)
         }
         // Crear instancias de los plugins
+        PluginRegistry.shared.clearAll()
+
+        let basePlugins: [FeaturePlugin.Type] = [
+            CategoryPlugin.self,
+            ReminderPlugin.self,
+            StreakPlugin.self,
+            NotesPlugin.self,
+            StatsPlugin.self,
+        ]
+
+        for t in basePlugins { PluginRegistry.shared.register(t) }
+
+        #if PREMIUM
+        // Rewards/ChainedHabits dependen de SwiftData; si el usuario dejó JSON guardado en AppStorage,
+        // forzamos SwiftData en la build Premium para que funcionen.
+        if storageType != .swiftData {
+            storageType = .swiftData
+        }
+        PluginRegistry.shared.register(RewardsPlugin.self)
+        PluginRegistry.shared.register(ChainedHabitsPlugin.self)
+        #endif
+
         self.plugins = PluginRegistry.shared.createPluginInstances(config: self)
+        print("Plugins instanciados: \(PluginRegistry.shared.count)")
+        print(PluginRegistry.shared.pluginInstances)
+        print("storageType:", storageType)
+        print("SwiftDataContext.shared nil?", SwiftDataContext.shared == nil)
     }
 
     private lazy var swiftDataProvider: SwiftDataStorageProvider = {
