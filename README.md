@@ -1,46 +1,48 @@
 # HabitApp — SwiftUI Habit Tracker (iOS + macOS)
 
-App de seguimiento de hábitos construida en **SwiftUI** con arquitectura modular basada en **plugins**. Soporta múltiples frecuencias (diaria, semanal, mensual, personalizada) y permite extender funcionalidad mediante features enchufables sin acoplar el Core. La persistencia está abstraída mediante `StorageProvider` (SwiftData/JSON/Mock).
+App de seguimiento de hábitos construida en **SwiftUI** con arquitectura modular basada en **plugins**. Soporta múltiples frecuencias (diaria, semanal, mensual, personalizada) y permite extender funcionalidad mediante *features* enchufables sin acoplar el Core. La persistencia está abstraída mediante `StorageProvider` (SwiftData / JSON / Mock).
 
 ---
 
 ## 📋 Índice
 
-- [Características principales](#-características-principales)
-- [Arquitectura](#-arquitectura)
-- [Estructura del proyecto](#-estructura-del-proyecto)
-- [Requisitos](#-requisitos)
-- [Instalación y ejecución](#-instalación-y-ejecución)
-- [Tests](#-tests)
-- [Persistencia](#-persistencia)
-- [Sistema de plugins](#-sistema-de-plugins)
-- [CI/CD con GitHub Actions](#-cicd-con-github-actions)
-- [Convenciones de código](#-convenciones-de-código)
-- [Contribución](#-contribución)
-- [Roadmap](#-roadmap)
-- [Licencia](#-licencia)
+* [Características principales](#-características-principales)
+* [Arquitectura](#-arquitectura)
+* [Estructura del proyecto](#-estructura-del-proyecto)
+* [Requisitos](#-requisitos)
+* [Instalación y ejecución](#-instalación-y-ejecución)
+* [Tests](#-tests)
+* [Persistencia](#-persistencia)
+* [Sistema de plugins](#-sistema-de-plugins)
+* [Features incluidas](#-features-incluidas)
+* [Versiones (Base vs Premium)](#-versiones-base-vs-premium)
+* [CI/CD con GitHub Actions](#-cicd-con-github-actions)
+* [Convenciones de código](#-convenciones-de-código)
+* [Contribución](#-contribución)
+* [Roadmap](#-roadmap)
+* [Licencia](#-licencia)
 
 ---
 
 ## ✨ Características principales
 
-- ✅ **SwiftUI nativo** para iOS y macOS con UI adaptada por plataforma
-- ✅ **Modelo `Habit`** con SwiftData (`@Model`) + `Codable` para export/import
-- ✅ **Frecuencias flexibles**: diaria, semanal, mensual y personalizada
-- ✅ **Persistencia intercambiable**: SwiftData, JSON o Mock (sin reescribir UI)
-- ✅ **Sistema de plugins modular**:
-  - Reaccionar a eventos del dominio (borrado, completion)
-  - Aportar vistas extra (row, detail, settings)
-  - Gestionar modelos y storage propios por feature
-- ✅ **Features incluidas**:
-  - Categories (categorización con colores)
-  - Streaks (rachas de cumplimiento)
-  - Statistics (métricas y gráficos)
-  - Rewards (sistema de XP y logros)
-  - Daily Notes (notas por día)
-  - Reminders (notificaciones locales)
-  - Due Date (fechas límite)
-  - Chained Habits (dependencias entre hábitos)
+* ✅ **SwiftUI nativo** para iOS y macOS con UI adaptada por plataforma
+* ✅ **Modelo `Habit`** con SwiftData (`@Model`) + `Codable` para export/import
+* ✅ **Frecuencias flexibles**: diaria, semanal, mensual y personalizada
+* ✅ **Persistencia intercambiable**: SwiftData, JSON o Mock
+* ✅ **Sistema de plugins modular**
+  * Reacción a eventos del dominio (borrado, completion)
+  * Vistas extra (row, detail, settings)
+  * Modelos y storage propios por feature
+* ✅ **Features incluidas**:
+  * Categories (organización por categorías)
+  * Streaks (rachas de días consecutivos)
+  * Statistics (dashboard de progreso)
+  * Daily Notes (notas por día)
+  * Reminders (notificaciones programables)
+  * **Rewards** (sistema XP/niveles) — *Premium*
+  * **Chained Habits** (rutinas secuenciales) — *Premium*
+* ✅ **Dos versiones**: Base (features core) y Premium (Rewards + ChainedHabits)
 
 ---
 
@@ -49,24 +51,35 @@ App de seguimiento de hábitos construida en **SwiftUI** con arquitectura modula
 ### Principios de diseño
 
 1. **Separación de responsabilidades**: Core → Features → Infrastructure
-2. **Inversión de dependencias**: Core depende de abstracciones (`StorageProvider`, `PluginRegistry`), no de implementaciones
-3. **Extensibilidad**: nuevas features se enchufan sin modificar el Core
-4. **Testabilidad**: toda persistencia es inyectable y mockeable
+2. **Inversión de dependencias**: Core depende de abstracciones (`FeaturePlugin`, `DataPlugin`, `ViewPlugin`)
+3. **Extensibilidad**: nuevas features sin modificar el Core
+4. **Testabilidad**: persistencia inyectable y mockeable
+5. **Event-driven**: `PluginRegistry` actúa como event bus entre Core y plugins
 
 ### Capas del sistema
 
-- **Core** (`HabitApp/Core`):
-  - Contiene el modelo principal (`Habit`)
-  - View model (`HabitListViewModel`) que usa `StorageProvider`
-  - Vistas “base” (listado, detalle, add/edit)
-- **Features** (`HabitApp/Features/*`):
-  - Módulos independientes (categorías, streaks, estadísticas, etc.)
-  - Se integran a través del `PluginRegistry`
-- **Infrastructure** (`HabitApp/Infraestructure`):
-  - Persistencia real (SwiftData/JSON)
-  - Infraestructura de plugins (registro/descubrimiento/protocolos)
+* **Core** (`HabitApp/Core`)
+  * Modelo `Habit` (SwiftData + Codable)
+  * `HabitListViewModel` (lógica CRUD)
+  * Vistas base (List, Detail, Add, Edit)
+* **Features** (`HabitApp/Features/*`)
+  * Módulos independientes con sus propios modelos/storage/vistas
+  * Integración vía `PluginRegistry` (sin dependencias directas del Core)
+* **Infrastructure** (`HabitApp/Infrastructure`)
+  * Persistencia (SwiftData / JSON)
+  * Infraestructura de plugins (`FeaturePlugin`, `DataPlugin`, `ViewPlugin`)
 
-La idea: **Core no conoce features concretas**, solo contratos. Las features se enchufan.
+> El **Core no conoce features concretas**, solo contratos (protocolos). Esto permite añadir/quitar features compilando con flags (`#if PREMIUM`).
+
+### Patrones aplicados
+
+| Patrón | Dónde | Por qué |
+|--------|-------|---------|
+| **MVVM** | Core/Views | Separar lógica de presentación |
+| **Repository** | StorageProvider | Abstraer persistencia |
+| **Plugin/Event Bus** | PluginRegistry | Desacoplar features del Core |
+| **Dependency Injection** | AppConfig → ViewModels | Inyectar storage provider |
+| **Strategy** | StorageProvider implementations | Intercambiar backends |
 
 ---
 
@@ -75,55 +88,66 @@ La idea: **Core no conoce features concretas**, solo contratos. Las features se 
 ```text
 HabitApp/
 ├── Application/
-│   ├── AppConfig.swift           # DI container + configuración global
-│   ├── Notifications.swift       # Gestión de notificaciones locales
-│   └── TaskApp.swift             # Entry point (@main)
+│   ├── AppConfig.swift          # Configuración global + registro de plugins
+│   ├── Notifications.swift      # Setup de notificaciones locales
+│   └── TaskApp.swift            # @main entry point (iOS/macOS adaptive)
 ├── Core/
 │   ├── Models/
-│   │   └── Habit.swift           # Modelo principal (@Model + Codable)
+│   │   └── Habit.swift          # @Model + Codable, frecuencias, completion
 │   ├── ViewModels/
-│   │   └── HabitListViewModel.swift  # Lógica CRUD de hábitos
+│   │   └── HabitListViewModel.swift  # CRUD + event dispatch a plugins
 │   └── Views/
 │       ├── HabitListView.swift
 │       ├── HabitDetailView.swift
 │       ├── AddHabitView.swift
 │       ├── EditHabitView.swift
 │       └── HabitRowView.swift
-├── Features/                     # Plugins modulares
-│   ├── Categories/               # Categorización con colores
-│   ├── ChainedHabits/            # Dependencias entre hábitos
-│   ├── DailyNotes/               # Notas por día
-│   ├── DueDate/                  # Fechas límite
-│   ├── Reminders/                # Notificaciones
-│   ├── Rewards/                  # Sistema XP + logros
-│   ├── Settings/                 # Configuración
-│   ├── Statistics/               # Métricas y gráficos
-│   └── Streaks/                  # Rachas de cumplimiento
+├── Features/
+│   ├── Categories/              # Organización por categorías
+│   │   ├── CategoryPlugin.swift
+│   │   ├── Models/
+│   │   ├── Storage/
+│   │   └── Views/
+│   ├── ChainedHabits/           # 🔒 PREMIUM: rutinas secuenciales
+│   │   ├── ChainedHabitsPlugin.swift
+│   │   ├── Models/
+│   │   ├── Storage/
+│   │   └── Views/
+│   ├── DailyNotes/              # Notas por hábito/día
+│   ├── DueDate/                 # (legacy, deshabilitado)
+│   ├── Reminders/               # Notificaciones programables
+│   ├── Rewards/                 # 🔒 PREMIUM: XP/niveles
+│   │   ├── RewardsPlugin.swift
+│   │   ├── Storage/
+│   │   └── Views/
+│   ├── Settings/                # Pantalla de configuración
+│   ├── Statistics/              # Dashboard de progreso
+│   └── Streaks/                 # Rachas de días consecutivos
 └── Infrastructure/
     ├── Persistence/
-    │   ├── StorageProvider.swift          # Protocolo base
-    │   ├── SwiftDataStorageProvider.swift # Implementación SwiftData
-    │   ├── JSONStorageProvider.swift      # Implementación JSON
-    │   └── MockStorageProvider.swift      # Mock para tests/previews
+    │   ├── StorageProvider.swift         # Protocolo base
+    │   ├── SwiftDataStorageProvider.swift
+    │   ├── JSONStorageProvider.swift
+    │   └── MockStorageProvider.swift
     └── Plugins/
-        ├── FeaturePlugin.swift      # Protocolo base de plugins
-        ├── DataPlugin.swift         # Extensión para eventos de dominio
-        ├── ViewPlugin.swift         # Extensión para UI adicional
-        ├── PluginRegistry.swift     # Registro + event bus
-        └── PluginDiscovery.swift    # Auto-descubrimiento de plugins
+        ├── FeaturePlugin.swift           # Protocolo base
+        ├── DataPlugin.swift              # + modelos SwiftData + eventos
+        ├── ViewPlugin.swift              # + vistas inyectables
+        ├── PluginRegistry.swift          # Event bus + descubrimiento
+        └── PluginDiscovery.swift         # Runtime discovery (opcional)
 
 HabitAppTests/
-├── HabitTests.swift               # Tests del modelo Habit
-└── HabitListViewModelTests.swift  # Tests del ViewModel
-````
+├── HabitTests.swift                      # Unit tests del modelo
+└── HabitListViewModelTests.swift         # Tests del ViewModel con mock
+```
 
 ---
 
 ## 📦 Requisitos
 
-- **macOS** con **Xcode 15+** instalado
-- **iOS Simulator** para ejecutar tests de iOS (en local o CI)
-- **Swift 5.9+** (para soporte de macros `@Model`, `@Test`, etc.)
+* **macOS 15.0+** con **Xcode 16+**
+* **Swift 6.0+**
+* **iOS Simulator** para tests
 
 ---
 
@@ -131,78 +155,75 @@ HabitAppTests/
 
 ### Desde Xcode
 
-1. **Clona** el repositorio:
+1. Clona el repositorio:
+
    ```bash
    git clone https://github.com/uallps/habitapp4.git
    cd habitapp4
    ```
+2. Abre `HabitApp.xcodeproj`
+3. Selecciona el scheme:
 
-2. **Abre** el proyecto en Xcode (`HabitApp.xcodeproj`).
+   * `HabitApp`
+   * `HabitApp Premium`
+4. Ejecuta con ⌘R
 
-3. **Selecciona** el scheme:
-   - `HabitApp` (scheme principal, incluye tests)
-   - `HabitApp Premium` (build alternativo, sin tests)
 
-4. **Ejecuta** (⌘R) en:
-   - iOS Simulator (iPhone/iPad)
-   - macOS (My Mac - Designed for iPad o nativo según target)
-
-> **Nota**: el entry point es `TaskAppMain` en `HabitApp/Application/TaskApp.swift`. El nombre del `@main` struct no coincide necesariamente con el nombre del scheme/target.
-
-### Desde la terminal
-
-Para ejecutar la app en un simulador específico:
+### Desde terminal
 
 ```bash
-xcrun simctl boot "iPhone 15"
+# Boot simulator
+xcrun simctl boot "iPhone 17"
 open -a Simulator
-```
 
-Luego, en otra terminal, dentro del directorio del proyecto:
+# Build + Run (iOS)
+xcodebuild \
+  -project HabitApp.xcodeproj \
+  -scheme "HabitApp Premium" \
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
+  build
 
-```bash
+# Build + Run (macOS)
 xcodebuild \
   -project HabitApp.xcodeproj \
   -scheme "HabitApp" \
-  -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+  -destination 'platform=macOS' \
   build
 ```
 
 ---
 
-## Apartado 7: Tests
-
-```md
----
-
 ## 🧪 Tests
 
-Los tests viven en [HabitAppTests](http://_vscodecontentref_/0) y usan el **Swift Testing framework** (macros `@Test`, `@Suite`, `#expect`).
+Los tests viven en `HabitAppTests` y usan **Swift Testing**.
 
 ### Qué se testea
 
-| Archivo | Scope | Validaciones |
-|---------|-------|--------------|
-| [HabitTests.swift](http://_vscodecontentref_/1) | Modelo `Habit` | Inicialización, completion por periodo, serialización `Codable` |
-| `HabitListViewModelTests.swift` | `HabitListViewModel` | CRUD operations con `StorageProvider` mockeado (load/add/remove/toggle) |
+| Archivo                       | Scope     | Validaciones                        |
+| ----------------------------- | --------- | ----------------------------------- |
+| HabitTests.swift              | Modelo    | Inicialización, completion, Codable |
+| HabitListViewModelTests.swift | ViewModel | CRUD con StorageProvider mock       |
 
 ### Ejecutar tests
 
 ```bash
-# Desde Xcode: ⌘U en el scheme "HabitApp"
-# O por terminal:
+# iOS
 xcodebuild test \
   -project HabitApp.xcodeproj \
   -scheme "HabitApp" \
-  -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest'
-```
-`````
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest'
 
-```md
-### Ejemplo de test (Swift Testing)
+# macOS
+xcodebuild test \
+  -project HabitApp.xcodeproj \
+  -scheme "HabitApp" \
+  -destination 'platform=macOS'
+```
+
+### Ejemplo de test
 
 ```swift
-@Test("Habit toggles completion for current period")
+@Test("Habit toggles completion for current period (daily)")
 func testToggleCompletionDaily() {
     let habit = Habit(name: "Agua", frequency: .daily)
     
@@ -215,37 +236,21 @@ func testToggleCompletionDaily() {
     #expect(habit.lastCompletedDate == nil)
     #expect(habit.isCompletedForCurrentPeriod == false)
 }
----
-
-## Apartado 8: Persistencia
-
-```md
-### Implementaciones disponibles
-
-| Provider | Uso | Detalles |
-|----------|-----|----------|
-| `SwiftDataStorageProvider` | **Producción (por defecto)** | Persistencia nativa con SwiftData + `ModelContainer` |
-| `JSONStorageProvider` | Export/import manual | Guarda hábitos en JSON en disco (útil para backup) |
-| `MockStorageProvider` | Previews y tests | En memoria; no persiste entre ejecuciones |
-
-### Cambiar el backend de persistencia
-
-Edita `AppConfig.swift`:
-
-```swift
-// Cambiar de SwiftData a JSON:
-let storageProvider: StorageProvider = JSONStorageProvider()
-
-// O usar Mock para desarrollo sin side effects:
-let storageProvider: StorageProvider = MockStorageProvider()
+```
 
 ---
 
 ## 💾 Persistencia
 
-### Contrato base
+### Implementaciones disponibles
 
-[StorageProvider.swift](http://_vscodecontentref_/2):
+| Provider                 | Uso        | Detalles                   |
+| ------------------------ | ---------- | -------------------------- |
+| SwiftDataStorageProvider | Producción | SwiftData + ModelContainer |
+| JSONStorageProvider      | Backup     | Export/import JSON         |
+| MockStorageProvider      | Tests      | En memoria, sin I/O        |
+
+### Contrato base
 
 ```swift
 @MainActor
@@ -253,21 +258,43 @@ protocol StorageProvider: AnyObject {
     func loadHabits() async throws -> [Habit]
     func saveHabits(habits: [Habit]) async throws
 }
-`````
+```
+Cambiar provider `AppConfig` : 
+
+```swift
+@AppStorage("storageType") var storageType: StorageType = .swiftData
+
+var storageProvider: StorageProvider {
+    switch storageType {
+    case .swiftData: return swiftDataProvider
+    case .json:      return JSONStorageProvider.shared
+    }
+}
+```
+> **Importante:** las features Premium (Rewards, ChainedHabits) requieren SwiftData porque dependen de SwiftDataContext.shared. Si cambias a JSON, esas features quedarán inactivas.
 
 ---
 
-## Apartado 9: Sistema de plugins
+## 🔌 Sistema de plugins
 
-```md
-#### 2. `DataPlugin`
+Infraestructura en `Infrastructure/Plugins`.
 
-Permite reaccionar a eventos del dominio:
+### FeaturePlugin
+
+```swift
+protocol FeaturePlugin {
+    var isEnabled: Bool { get }
+    init(config: AppConfig)
+}
+```
+Todas las features implementan este protocolo.
+
+### DataPlugin
 
 ```swift
 protocol DataPlugin: FeaturePlugin {
     var models: [any PersistentModel.Type] { get }
-    
+
     func willDeleteHabit(_ habit: Habit) async
     func didDeleteHabit(habitId: UUID) async
     func habitCompletionDidChange(
@@ -277,61 +304,95 @@ protocol DataPlugin: FeaturePlugin {
     ) async
 }
 ```
----
+Permite a features:
 
-## 🔌 Sistema de plugins
+- **Exponer modelos SwiftData** (se añaden al `Schema` automáticamente).
 
-Infraestructura en `HabitApp/Infrastructure/Plugins/`.
+- **Reaccionar a eventos del Core** (borrado, completion) sin acoplamiento
 
-### Protocolos clave
-
-#### 1. `FeaturePlugin`
-
-Base para todas las features:
-
+Ejemplo : `StreakPlugin`
 ```swift
-protocol FeaturePlugin {
-    var isEnabled: Bool { get }
-    init(config: AppConfig)
+@MainActor
+final class StreakPlugin: DataPlugin {
+    var models: [any PersistentModel.Type] { [HabitStreak.self] }
+    var isEnabled: Bool { config.enableStreaks }
+    
+    func habitCompletionDidChange(
+        habitId: UUID,
+        isCompleted: Bool,
+        completionDate: Date?
+    ) async {
+        StreakStorage.applyCompletionChange(habitId: habitId, isCompleted: isCompleted)
+    }
 }
 ```
+ViewPlugin (UI inyectable)
+```swift
+@MainActor
+protocol ViewPlugin: FeaturePlugin {
+    func habitRowView(for habit: Habit) -> AnyView
+    func habitDetailView(for habit: Binding<Habit>) -> AnyView
+    func settingsView() -> AnyView
+}
+```
+Permite a features:
 
+- **Inyectar vistas** en las pantallas del Core (row, detail, settings)
+- El Core las renderiza sin conocer qué feature las provee.
+
+**Ejemplo:** mostrar racha en cada row
+```swift
+ForEach(habits) { habit in
+    HStack {
+        Text(habit.name)
+        ForEach(PluginRegistry.shared.getHabitRowViews(for: habit), id: \.self) { view in
+            view
+        }
+    }
+}
+```
+PluginRegistry (event bus)
+
+Centraliza el registro y dispatch de eventos:
+```swift
+@MainActor
+class PluginRegistry {
+    static let shared = PluginRegistry()
+    
+    func register(_ pluginType: FeaturePlugin.Type)
+    func createPluginInstances(config: AppConfig) -> [FeaturePlugin]
+    
+    func notifyHabitWillBeDeleted(_ habit: Habit) async
+    func notifyHabitCompletionDidChange(habitId: UUID, isCompleted: Bool, ...) async
+    
+    func getHabitRowViews(for habit: Habit) -> [AnyView]
+    func getHabitDetailViews(for habit: Binding<Habit>) -> [AnyView]
+}
+```
+**Flujo completo:**
+
+1. Usuario completa un hábito
+2. `HabitListViewModel.toggleHabitCompletion(...)` actualiza modelo y persiste
+3. ViewModel llama `PluginRegistry.shared.notifyHabitCompletionDidChange(...)`
+4. Registry fan-out a todos los DataPlugin activos
+5. `StreakPlugin`, `RewardsPlugin`, etc. reaccionan sin que el Core los conozca
 ---
 
 ## 🔄 Flujo de datos y eventos
 
-Ejemplo: marcar un hábito como completado.
+1. Usuario interactúa con una View
+2. View → ViewModel
+3. ViewModel actualiza modelo y persiste
+4. `PluginRegistry` notifica a los plugins
 
-1. User → View → ViewModel.toggleCompletion()
-              ├─ Update model
-              ├─ StorageProvider.save()
-              └─ PluginRegistry.notify()
-                 └─ All DataPlugins react:
-                    ├─ StreakPlugin updates streaks
-                    ├─ StatsPlugin recalculates metrics
-                    └─ RewardsPlugin grants XP
-
-### Flujo de datos típico
-
-1. **Usuario** interactúa con una `View` (ej. marca hábito completado)
-2. **View** llama al `ViewModel.toggleCompletion(...)`
-3. **ViewModel**:
-   - Actualiza el modelo `Habit`
-   - Persiste vía `StorageProvider.saveHabits(...)`
-   - Notifica a `PluginRegistry.notifyHabitCompletionDidChange(...)`
-4. **Plugins** suscritos (`StreakPlugin`, `StatsPlugin`, `RewardsPlugin`):
-   - Reciben el evento
-   - Actualizan su estado interno (rachas, estadísticas, XP, etc.)
-   - Persisten sus propios datos si es necesario
-
-**Ventaja clave**: el Core nunca conoce qué plugins existen → desacoplamiento total.
-```
+Ventaja clave: **desacoplamiento total**.
 
 ---
 
-## Apartado 10: CI/CD con GitHub Actions
+## 🔄 CI/CD con GitHub Actions
 
-```md
+Configuración en `.github/workflows/build.yml`.
+
 ### Triggers
 
 ```yaml
@@ -341,136 +402,105 @@ on:
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
-  
----
+```
 
-## 🔄 CI/CD con GitHub Actions
-
-Configuración en `.github/workflows/build.yml`.
-
-### Jobs principales
-
-1. **`build`**: compila + ejecuta tests en matriz (iOS/macOS × schemes)
-2. **`create-release`**: empaqueta builds y crea releases automáticas en `main`
-
-### Configuración de matrix
+### Matrix
 
 ```yaml
 strategy:
   matrix:
     platform: [iOS, macOS]
     scheme: ["HabitApp", "HabitApp Premium"]
-    include:
-      - platform: iOS
-        sdk: iphonesimulator
-        destination: "platform=iOS Simulator,name=iPhone 15,OS=latest"
-      - platform: macOS
-        sdk: macosx
-        destination: "platform=macOS"
 ```
-`````
+Builds:
 
----
+- iOS Base
+- iOS Premium
+- macOS Base
+- macOS Premium
 
-## Apartado 11: Convenciones de código
+Steps destacados
 
-```md
+1. **Build** con `xcodebuild` (sin firma)
+2. **Test** (solo para scheme `HabitApp` en iOS)
+3. **Archivar artifacts** (`.app` bundles)
+4. **Release automático** en `main` (tags `v1.0.X`)
+
 ---
 
 ## 📝 Convenciones de código
 
-### Naming
+Nombres
+* **Archivos:** PascalCase (HabitListView.swift)
+* **Protocolos:** sustantivo o `-able` (`FeaturePlugin`, `Codable`)
+ViewModels: sufijo `ViewModel` (`HabitListViewModel`)
+* **Storage/Repository:** sufijo `Storage` o `Provider` (`CategoryStorage`, `StorageProvider`)
 
-- **Archivos y carpetas**: PascalCase (`HabitListView.swift`, `Models/`)
-- **Protocolos**: sufijo descriptivo (`StorageProvider`, `DataPlugin`)
-- **ViewModels**: sufijo `ViewModel` (`HabitListViewModel`)
+Estilo
 
-### Async/await
-
-- Toda persistencia es `async throws`
-- Compatible con Swift Concurrency (no callbacks)
-
-### MainActor
-
-- `@MainActor` en ViewModels y StorageProviders
-- Simplifica binding con SwiftUI (no necesita `DispatchQueue.main.async`)
-
-### Testing
-
-- Framework: **Swift Testing** (no XCTest clásico)
-- Macros: `@Test`, `@Suite`, `#expect`
-- Mock providers para inyección de dependencias
-
-### Commits
-
-Seguimos [Conventional Commits](https://www.conventionalcommits.org/):
+* **Async/Await** para persistencia (no callbacks)
+* **MainActor** para ViewModels y plugins (Swift 6 concurrency)
+* **Swift Testing** para tests ( `@Test`, `#expect`)
+* **MARK:** para seccionar archivos largos
 
 ---
 
 ## 🤝 Contribución
 
-¡Contribuciones bienvenidas! Sigue estos pasos:
+1. Fork del repo
+2. Crea branch desde `develop`
 
-1. **Fork** el repositorio
-2. **Crea una branch** desde `develop`:
    ```bash
    git checkout develop
-   git checkout -b feature/mi-nueva-feature
+   git checkout -b feature/mi-feature
+   ```
+3. Commits descriptivos:
+   ```bash
+      git commit -m "feat(streaks): añadir cálculo de racha mensual"
+   ```
+4. Pull Request a `develop`
 
+Agregar una nueva feature
 
----
+1. Crea carpeta en `HabitApp/Features/MiFeature/`
+2. Implementa `MiFeaturePlugin`: `DataPlugin` o `ViewPlugin`
+3. Registra en `AppConfig.init()`:
+```swift
+PluginRegistry.shared.register(MiFeaturePlugin.self)
+```
+4. Añade tests en `HabitAppTests/MiFeatureTests.swift`
 
-## Apartado 13: Roadmap
-
-```md
 ---
 
 ## 🗺️ Roadmap
 
 ### v1.1 (Q1 2026)
-- [ ] Tests unitarios por feature (`StreakPluginTests`, `CategoryPluginTests`)
-- [ ] Export/import completo a JSON/CSV
-- [ ] Localización (i18n) a inglés y español
+
+* Tests unitarios por feature (Streaks, Rewards, etc.)
+* Export/import CSV (además de JSON)
+* i18n ES / EN
+* Dark mode manual toggle
 
 ### v1.2 (Q2 2026)
-- [ ] Widgets iOS 17+ (pantalla de inicio + lock screen)
-- [ ] Soporte de temas (light/dark/auto + temas custom)
-- [ ] Integración con HealthKit (opcional)
+
+* Widgets iOS 17+
+* Temas custom
+* HealthKit (opcional)
+* Siri Shortcuts para marcar completado
 
 ### v2.0 (Q3 2026)
-- [ ] Sincronización con iCloud (CloudKit)
-- [ ] Modo offline-first con reconciliación automática
-- [ ] App para watchOS
 
-### Futuro
-- [ ] Compartir hábitos con otros usuarios
-- [ ] Comunidad y desafíos públicos
-- [ ] Estadísticas avanzadas con ML (predicción de rachas)
-
----
-
-## 📚 Recursos y referencias
-
-- [SwiftUI Documentation](https://developer.apple.com/documentation/swiftui/)
-- [SwiftData Documentation](https://developer.apple.com/documentation/swiftdata)
-- [Swift Testing (SE-0384)](https://github.com/apple/swift-testing)
-- [WWDC 2023: Meet SwiftData](https://developer.apple.com/videos/play/wwdc2023/10187/)
-- [Plugin Architecture Pattern](https://martinfowler.com/articles/plugin.html)
-- [Conventional Commits](https://www.conventionalcommits.org/)
+* iCloud / CloudKit
+* Offline-first
+* watchOS
 
 ---
 
 ## 📄 Licencia
 
-Pendiente. Añade aquí la licencia cuando corresponda (MIT, Apache 2.0, GPL, etc.).
+Este proyecto está licenciado bajo la **MIT License**. Ver el archivo [LICENSE](LICENSE) para más detalles.
 
----
-
-## 💬 Contacto y soporte
-
-- **Issues**: [Reportar bugs o solicitar features](https://github.com/uallps/habitapp4/issues)
-- **Discussions**: [Preguntas generales o ideas](https://github.com/uallps/habitapp4/discussions)
-- **Pull Requests**: siempre bienvenidos (revisa [Contribución](#-contribución))
+Copyright (c) 2026 habitapp4 contributors
 
 ---
 
